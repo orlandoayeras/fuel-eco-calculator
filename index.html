@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Fuel economy calculator for gasoline, hybrid, and electric vehicles">
+  <title>Fuel Economy Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FuelEco">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --p: #4f46e5;
+      --ps: #eef2ff;
+      --pd: #4338ca;
+      --pf: rgba(79,70,229,0.15);
+      --bg: #f1f5f9;
+      --surf: #ffffff;
+      --txt: #0f172a;
+      --muted: #94a3b8;
+      --border: #e2e8f0;
+      --r: 14px;
+      --trans: 0.2s ease;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      min-height: 100dvh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--p);
+      color: #fff;
+      padding: 0.875rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      transition: background var(--trans);
+    }
+
+    .header-icon { font-size: 1.375rem; }
+
+    header h1 {
+      flex: 1;
+      font-size: 1.0625rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .header-controls { display: flex; gap: 0.5rem; align-items: center; }
+
+    .currency-input {
+      width: 3.5ch;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 3px 4px;
+      outline: none;
+    }
+    .currency-input::placeholder { color: rgba(255,255,255,0.5); }
+
+    .pill-group {
+      display: flex;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 2px;
+    }
+
+    .pill-btn {
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 18px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background var(--trans), color var(--trans);
+    }
+    .pill-btn.on { background: #fff; color: var(--p); }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 1rem;
+      padding-bottom: 4rem;
+    }
+
+    /* ── Mode tabs ── */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .mode-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1875rem;
+      padding: 0.625rem 0.375rem;
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surf);
+      cursor: pointer;
+      transition: border-color var(--trans), background var(--trans), color var(--trans);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .mode-tab .ti { font-size: 1.375rem; }
+    .mode-tab.on {
+      border-color: var(--p);
+      background: var(--ps);
+      color: var(--p);
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surf);
+      border-radius: var(--r);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* ── Section separator inside card ── */
+    .sec-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--p);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.875rem 0 0.75rem;
+    }
+    .sec-label::before, .sec-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Field ── */
+    .field { margin-bottom: 0.75rem; }
+    .field:last-child { margin-bottom: 0; }
+
+    .field label {
+      display: flex;
+      align-items: center;
+      gap: 0.3125rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--txt);
+      margin-bottom: 0.3125rem;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: stretch;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color var(--trans), box-shadow var(--trans);
+      background: var(--surf);
+    }
+    .input-row:focus-within {
+      border-color: var(--p);
+      box-shadow: 0 0 0 3px var(--pf);
+    }
+
+    .input-row input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 0.6875rem 0.875rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--txt);
+      background: transparent;
+      width: 0;
+      min-width: 0;
+    }
+    .input-row input::placeholder { color: #cbd5e1; }
+
+    .input-unit {
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--muted);
+      background: #f8fafc;
+      border-left: 1.5px solid var(--border);
+      white-space: nowrap;
+    }
+
+    /* ── Utility ── */
+    .gone { display: none !important; }
+
+    /* ── Calculate button ── */
+    .calc-btn {
+      width: 100%;
+      padding: 0.9375rem;
+      background: var(--p);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-size: 0.9375rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter var(--trans), transform 0.1s, background var(--trans);
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .calc-btn:hover { filter: brightness(1.08); }
+    .calc-btn:active { transform: scale(0.98); filter: brightness(0.95); }
+
+    /* ── Results ── */
+    #results { display: none; margin-top: 1rem; }
+    #results.show { display: block; animation: fadeUp 0.3s ease both; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hero card */
+    .hero {
+      background: linear-gradient(135deg, var(--p) 0%, var(--pd) 100%);
+      border-radius: var(--r);
+      padding: 1.375rem 1.25rem;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      transition: background var(--trans);
+    }
+    .hero-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.8;
+      margin-bottom: 0.25rem;
+    }
+    .hero-val {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+    .hero-unit { font-size: 0.875rem; opacity: 0.85; margin-top: 0.125rem; }
+    .hero-note {
+      margin-top: 0.75rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      opacity: 0.92;
+      line-height: 1.5;
+    }
+
+    /* Metrics grid */
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .metric {
+      background: var(--surf);
+      border-radius: var(--r);
+      padding: 0.875rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+    .metric-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    .metric-val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--p);
+      line-height: 1.2;
+      transition: color var(--trans);
+    }
+    .metric-sub {
+      font-size: 0.6875rem;
+      color: var(--muted);
+      margin-top: 0.1875rem;
+    }
+
+    /* Cost card */
+    .cost-card {
+      background: var(--surf);
+      border-radius: var(--r);
+      padding: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+    .cost-card-title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .cost-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .cost-row:last-child {
+      border-bottom: none;
+      padding-top: 0.75rem;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .cost-row .lbl { color: var(--muted); }
+    .cost-row .val { font-weight: 600; color: var(--txt); }
+    .cost-row:last-child .val { color: var(--p); font-size: 1.125rem; transition: color var(--trans); }
+
+    /* ── Guide / How it works ── */
+    .guide-panel {
+      margin-bottom: 0.75rem;
+      background: var(--surf);
+      border-radius: var(--r);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .guide-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem 1rem;
+      cursor: pointer;
+      list-style: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--txt);
+      user-select: none;
+    }
+    .guide-summary::-webkit-details-marker { display: none; }
+    .guide-arrow {
+      font-size: 1.125rem;
+      color: var(--muted);
+      transition: transform var(--trans);
+      line-height: 1;
+    }
+    .guide-panel[open] .guide-arrow { transform: rotate(90deg); }
+    .guide-body {
+      padding: 0 1rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .guide-section { margin-top: 1rem; }
+    .guide-section-title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--p);
+      margin-bottom: 0.5rem;
+      transition: color var(--trans);
+    }
+    .guide-item {
+      display: flex;
+      gap: 0.625rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .guide-item-icon { flex-shrink: 0; }
+    .guide-item strong { color: var(--txt); }
+    .guide-tip {
+      margin-top: 0.875rem;
+      background: var(--ps);
+      border-radius: 8px;
+      padding: 0.625rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--p);
+      line-height: 1.5;
+      transition: background var(--trans), color var(--trans);
+    }
+
+    /* Reset */
+    .reset-wrap {
+      text-align: center;
+      margin-top: 0.875rem;
+    }
+    .reset-wrap button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="header-icon">⛽</span>
+    <h1>Fuel Economy</h1>
+    <div class="header-controls">
+      <input class="currency-input" id="currency" type="text" value="$" maxlength="3"
+             title="Currency symbol" aria-label="Currency symbol" placeholder="$">
+      <div class="pill-group">
+        <button class="pill-btn on" data-u="km" onclick="setUnit('km')">KM</button>
+        <button class="pill-btn" data-u="mi" onclick="setUnit('mi')">MI</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Mode tabs -->
+    <div class="mode-tabs" role="tablist" aria-label="Vehicle type">
+      <button class="mode-tab on" role="tab" data-m="gas" onclick="setMode('gas')" aria-selected="true">
+        <span class="ti" aria-hidden="true">🚗</span>Gasoline
+      </button>
+      <button class="mode-tab" role="tab" data-m="hyb" onclick="setMode('hyb')" aria-selected="false">
+        <span class="ti" aria-hidden="true">🔋</span>Hybrid EV
+      </button>
+      <button class="mode-tab" role="tab" data-m="ev" onclick="setMode('ev')" aria-selected="false">
+        <span class="ti" aria-hidden="true">⚡</span>Full EV
+      </button>
+    </div>
+
+    <!-- Input card -->
+    <div class="card">
+      <!-- Distance — always visible -->
+      <div class="field">
+        <label for="distance">📍 Distance</label>
+        <div class="input-row">
+          <input id="distance" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00" autocomplete="off">
+          <span class="input-unit" id="dist-unit">km</span>
+        </div>
+      </div>
+
+      <!-- Gasoline section header (hybrid only) -->
+      <div class="sec-label gone" id="gas-hdr" aria-hidden="true">⛽ Gasoline</div>
+
+      <!-- Fuel Used (gas + hybrid) -->
+      <div class="field" id="g-fuel-used">
+        <label for="fuel-used">🔴 Fuel Used</label>
+        <div class="input-row">
+          <input id="fuel-used" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00" autocomplete="off">
+          <span class="input-unit">L</span>
+        </div>
+      </div>
+
+      <!-- Fuel Price (gas + hybrid) -->
+      <div class="field" id="g-fuel-price">
+        <label for="fuel-price">💰 Fuel Price</label>
+        <div class="input-row">
+          <input id="fuel-price" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00" autocomplete="off">
+          <span class="input-unit">/ L</span>
+        </div>
+      </div>
+
+      <!-- Electric section header (hybrid only) -->
+      <div class="sec-label gone" id="elec-hdr" aria-hidden="true">⚡ Electric</div>
+
+      <!-- Battery Used (hybrid + EV) -->
+      <div class="field gone" id="g-battery">
+        <label for="battery-used">🔋 Battery Used</label>
+        <div class="input-row">
+          <input id="battery-used" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00" autocomplete="off">
+          <span class="input-unit">kWh</span>
+        </div>
+      </div>
+
+      <!-- Electricity Price (hybrid + EV) -->
+      <div class="field gone" id="g-elec-price">
+        <label for="elec-price">⚡ Electricity Price</label>
+        <div class="input-row">
+          <input id="elec-price" type="number" inputmode="decimal" min="0" step="any" placeholder="0.00" autocomplete="off">
+          <span class="input-unit">/ kWh</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <button class="calc-btn" onclick="calculate()" aria-label="Calculate fuel economy">
+      ⚡ Calculate
+    </button>
+
+    <!-- How it works guide -->
+    <details class="guide-panel">
+      <summary class="guide-summary">
+        <span>ℹ️&nbsp; How it works</span>
+        <span class="guide-arrow">›</span>
+      </summary>
+      <div class="guide-body">
+
+        <div class="guide-section">
+          <div class="guide-section-title">Vehicle Modes</div>
+          <div class="guide-item">
+            <span class="guide-item-icon">🚗</span>
+            <div><strong>Gasoline</strong> — for petrol or diesel vehicles. Measures fuel burned to compute economy and total fuel cost.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">🔋</span>
+            <div><strong>Hybrid EV</strong> — for plug-in or self-charging hybrids. Tracks gasoline and electricity consumption separately, then shows the combined picture.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">⚡</span>
+            <div><strong>Full EV</strong> — for pure electric vehicles. Measures battery energy drawn to compute electric efficiency and charging cost.</div>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title">Input Fields</div>
+          <div class="guide-item">
+            <span class="guide-item-icon">📍</span>
+            <div><strong>Distance</strong> — total trip distance in km or mi (toggle top-right). Use your odometer before and after the trip.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">🔴</span>
+            <div><strong>Fuel Used</strong> — litres of petrol or diesel consumed. Check your fuel pump receipt or vehicle trip computer.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">💰</span>
+            <div><strong>Fuel Price</strong> — price per litre at the pump in your local currency (set symbol top-left).</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">🔋</span>
+            <div><strong>Battery Used</strong> — kilowatt-hours (kWh) consumed from the battery. Found in your vehicle's energy display or charging app.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">⚡</span>
+            <div><strong>Electricity Price</strong> — cost per kWh from your electricity bill or charging station rate.</div>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title">Understanding Results</div>
+          <div class="guide-item">
+            <span class="guide-item-icon">📊</span>
+            <div><strong>Combined Fuel Economy (km/L or MPG)</strong> — how far the vehicle travels per litre of fuel. Higher is better.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">📊</span>
+            <div><strong>L/100km or kWh/100km</strong> — energy used per 100 km driven. Lower is better. Standard benchmark for comparing vehicles.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">📊</span>
+            <div><strong>km/kWh</strong> — electric equivalent of fuel economy. Higher is better.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">💵</span>
+            <div><strong>Cost per km</strong> — total energy cost ÷ distance. Best metric for comparing running costs between vehicles or trips.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">💵</span>
+            <div><strong>Cost per 100km</strong> — cost per km × 100. Widely used standard for vehicle running-cost comparison.</div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-item-icon">💰</span>
+            <div><strong>Total Trip Cost</strong> — total energy spend for the trip (fuel + electricity for hybrid).</div>
+          </div>
+        </div>
+
+        <div class="guide-tip">
+          💡 <strong>Tip for accuracy:</strong> Fill up your tank from empty, drive your usual route, then refill and record the exact litres pumped and distance driven on your odometer.
+        </div>
+
+      </div>
+    </details>
+
+    <!-- Results -->
+    <div id="results" role="region" aria-label="Results" aria-live="polite">
+      <div class="hero" id="hero"></div>
+      <div class="grid2" id="metrics"></div>
+      <div class="cost-card" id="cost-card"></div>
+      <div class="reset-wrap">
+        <button onclick="resetForm()">Clear &amp; Reset</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    'use strict';
+
+    let mode = 'gas';
+    let unit = 'km';
+
+    const COLORS = {
+      gas: { p: '#4f46e5', ps: '#eef2ff', pd: '#4338ca', pf: 'rgba(79,70,229,0.15)' },
+      hyb: { p: '#7c3aed', ps: '#ede9fe', pd: '#6d28d9', pf: 'rgba(124,58,237,0.15)' },
+      ev:  { p: '#059669', ps: '#d1fae5', pd: '#047857', pf: 'rgba(5,150,105,0.15)' },
+    };
+
+    function applyColors(m) {
+      const c = COLORS[m];
+      const s = document.documentElement.style;
+      s.setProperty('--p',  c.p);
+      s.setProperty('--ps', c.ps);
+      s.setProperty('--pd', c.pd);
+      s.setProperty('--pf', c.pf);
+      document.querySelector('meta[name="theme-color"]').content = c.p;
+    }
+
+    function tog(id, visible) {
+      document.getElementById(id).classList.toggle('gone', !visible);
+    }
+
+    function setMode(m) {
+      mode = m;
+      applyColors(m);
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        const on = t.dataset.m === m;
+        t.classList.toggle('on', on);
+        t.setAttribute('aria-selected', on);
+      });
+
+      const isGas  = m === 'gas' || m === 'hyb';
+      const isElec = m === 'hyb' || m === 'ev';
+      const isHyb  = m === 'hyb';
+
+      tog('g-fuel-used',  isGas);
+      tog('g-fuel-price', isGas);
+      tog('g-battery',    isElec);
+      tog('g-elec-price', isElec);
+      tog('gas-hdr',      isHyb);
+      tog('elec-hdr',     isHyb);
+
+      document.getElementById('results').classList.remove('show');
+    }
+
+    function setUnit(u) {
+      unit = u;
+      document.querySelectorAll('.pill-btn').forEach(b =>
+        b.classList.toggle('on', b.dataset.u === u));
+      document.getElementById('dist-unit').textContent = u;
+      if (document.getElementById('results').classList.contains('show')) calculate();
+    }
+
+    function n(id)   { return parseFloat(document.getElementById(id).value) || 0; }
+    function cur()   { return document.getElementById('currency').value.trim() || '$'; }
+    function f(v, d = 2) { return isFinite(v) && !isNaN(v) ? v.toFixed(d) : '—'; }
+    function money(v, d = 2) { return v === '—' ? '—' : `${cur()}${f(v, d)}`; }
+
+    function calculate() {
+      const dist = n('distance');
+      if (dist <= 0) { alert('Please enter a valid distance.'); return; }
+
+      const fuelUsed  = n('fuel-used');
+      const fuelPrice = n('fuel-price');
+      const battUsed  = n('battery-used');
+      const elecPrice = n('elec-price');
+      const dl        = unit;
+      const toMpg     = kmL => kmL * 2.35215;
+
+      let hero, metrics, costs;
+
+      if (mode === 'gas') {
+        if (fuelUsed <= 0) { alert('Please enter fuel used.'); return; }
+
+        const kmL      = dist / fuelUsed;
+        const l100     = (fuelUsed / dist) * 100;
+        const total    = fuelUsed * fuelPrice;
+        const perDist  = total / dist;
+        const per100   = perDist * 100;
+        const primVal  = dl === 'km' ? kmL : toMpg(kmL);
+        const primUnit = dl === 'km' ? 'km / L' : 'MPG';
+        const l100disp = dl === 'km' ? l100 : l100 / 1.60934;
+
+        hero = {
+          label: 'Combined Fuel Economy',
+          val:   f(primVal),
+          unit:  primUnit,
+          note:  `${f(l100disp)} L/100${dl} &nbsp;·&nbsp; ${money(per100, 2)} per 100${dl}`,
+        };
+        metrics = [
+          { label: `Fuel Economy`,      val: `${f(primVal)} ${primUnit}`, sub: 'Higher = more efficient' },
+          { label: `L / 100${dl}`,      val: f(l100disp),                 sub: 'Lower = more efficient' },
+          { label: `Cost / ${dl}`,      val: money(perDist, 3),           sub: `Per ${dl} driven` },
+          { label: `Cost / 100${dl}`,   val: money(per100),               sub: 'Standard benchmark' },
+          { label: 'Fuel Used',         val: `${f(fuelUsed)} L`,          sub: 'Litres consumed' },
+          { label: 'Total Trip Cost',   val: money(total),                 sub: 'Full trip expense' },
+        ];
+        costs = [
+          { lbl: '⛽ Fuel',              val: money(total) },
+          { lbl: `📍 Cost / ${dl}`,     val: money(perDist, 3) },
+          { lbl: `📍 Cost / 100${dl}`,  val: money(per100) },
+          { lbl: '💰 Total Trip Cost',  val: money(total) },
+        ];
+
+      } else if (mode === 'hyb') {
+        if (fuelUsed <= 0 && battUsed <= 0) {
+          alert('Please enter at least fuel used or battery used.'); return;
+        }
+        const fuelCost = fuelUsed * fuelPrice;
+        const elecCost = battUsed * elecPrice;
+        const total    = fuelCost + elecCost;
+        const perDist  = total / dist;
+        const per100   = perDist * 100;
+        const kmL      = fuelUsed > 0 ? dist / fuelUsed : null;
+        const kmKwh    = battUsed > 0 ? dist / battUsed : null;
+        const primVal  = kmL != null ? (dl === 'km' ? kmL : toMpg(kmL)) : null;
+        const primUnit = dl === 'km' ? 'km / L' : 'MPG';
+
+        const noteParts = [
+          kmL   != null ? `⛽ ${f(primVal)} ${primUnit}` : null,
+          kmKwh != null ? `⚡ ${f(kmKwh)} km/kWh` : null,
+          `Combined: ${money(perDist, 3)}/${dl}`,
+        ].filter(Boolean);
+
+        hero = {
+          label: 'Combined Fuel Economy',
+          val:   primVal != null ? f(primVal) : (kmKwh != null ? f(kmKwh) : '—'),
+          unit:  primVal != null ? primUnit : 'km / kWh',
+          note:  noteParts.join('&nbsp; · &nbsp;'),
+        };
+        metrics = [
+          { label: `Fuel (${primUnit})`,  val: primVal != null ? f(primVal) : '—', sub: 'Gasoline economy' },
+          { label: 'km / kWh',            val: kmKwh != null ? f(kmKwh) : '—',    sub: 'Electric efficiency' },
+          { label: `Cost / ${dl}`,        val: money(perDist, 3),                  sub: 'Combined' },
+          { label: `Cost / 100${dl}`,     val: money(per100),                      sub: 'Standard benchmark' },
+          { label: 'Fuel Cost',           val: money(fuelCost),                    sub: 'Gasoline portion' },
+          { label: 'Total Trip Cost',     val: money(total),                       sub: 'Fuel + electricity' },
+        ];
+        costs = [
+          { lbl: '⛽ Fuel Cost',           val: money(fuelCost) },
+          { lbl: '⚡ Electricity Cost',    val: money(elecCost) },
+          { lbl: `📍 Cost / ${dl}`,        val: money(perDist, 3) },
+          { lbl: `📍 Cost / 100${dl}`,     val: money(per100) },
+          { lbl: '💰 Total Trip Cost',     val: money(total) },
+        ];
+
+      } else { // ev
+        if (battUsed <= 0) { alert('Please enter battery used.'); return; }
+
+        const total   = battUsed * elecPrice;
+        const perDist = total / dist;
+        const per100  = perDist * 100;
+        const kmKwh   = dist / battUsed;
+        const kwh100  = (battUsed / dist) * 100;
+
+        hero = {
+          label: 'Electric Efficiency',
+          val:   f(kmKwh),
+          unit:  `${dl} / kWh`,
+          note:  `${f(kwh100)} kWh/100${dl} &nbsp;·&nbsp; ${money(per100)} per 100${dl}`,
+        };
+        metrics = [
+          { label: `km / kWh`,          val: f(kmKwh),            sub: 'Higher = more efficient' },
+          { label: `kWh / 100${dl}`,    val: f(kwh100),           sub: 'Lower = more efficient' },
+          { label: `Cost / ${dl}`,      val: money(perDist, 3),   sub: `Per ${dl} driven` },
+          { label: `Cost / 100${dl}`,   val: money(per100),       sub: 'Standard benchmark' },
+          { label: 'Battery Used',      val: `${f(battUsed)} kWh`, sub: 'Total consumed' },
+          { label: 'Total Trip Cost',   val: money(total),         sub: 'Electricity expense' },
+        ];
+        costs = [
+          { lbl: '⚡ Electricity',       val: money(total) },
+          { lbl: `📍 Cost / ${dl}`,      val: money(perDist, 3) },
+          { lbl: `📍 Cost / 100${dl}`,   val: money(per100) },
+          { lbl: '💰 Total Trip Cost',   val: money(total) },
+        ];
+      }
+
+      // Render hero
+      document.getElementById('hero').innerHTML = `
+        <div class="hero-label">${hero.label}</div>
+        <div class="hero-val">${hero.val}</div>
+        <div class="hero-unit">${hero.unit}</div>
+        ${hero.note ? `<div class="hero-note">${hero.note}</div>` : ''}
+      `;
+
+      // Render metrics
+      document.getElementById('metrics').innerHTML = metrics.map(m => `
+        <div class="metric">
+          <div class="metric-label">${m.label}</div>
+          <div class="metric-val">${m.val}</div>
+          <div class="metric-sub">${m.sub}</div>
+        </div>
+      `).join('');
+
+      // Render costs
+      document.getElementById('cost-card').innerHTML = `
+        <div class="cost-card-title">Cost Breakdown</div>
+        ${costs.map(c => `
+          <div class="cost-row">
+            <span class="lbl">${c.lbl}</span>
+            <span class="val">${c.val}</span>
+          </div>
+        `).join('')}
+      `;
+
+      // Show results
+      const r = document.getElementById('results');
+      r.classList.remove('show');
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        r.classList.add('show');
+        r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }));
+    }
+
+    function resetForm() {
+      document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
+      document.getElementById('results').classList.remove('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Init
+    setMode('gas');
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

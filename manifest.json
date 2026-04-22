@@ -1,0 +1,17 @@
+{
+  "name": "Fuel Economy Calculator",
+  "short_name": "FuelEco",
+  "description": "Calculate fuel economy for gasoline, hybrid, and electric vehicles",
+  "start_url": "/fuel-eco-calculator/",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
