@@ -59,19 +59,23 @@
 
     .header-controls { display: flex; gap: 0.5rem; align-items: center; }
 
-    .currency-input {
-      width: 3.5ch;
+    .currency-select {
       background: rgba(255,255,255,0.2);
       border: none;
       border-radius: 6px;
       color: #fff;
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
       font-weight: 700;
-      text-align: center;
-      padding: 3px 4px;
+      padding: 3px 6px;
       outline: none;
+      cursor: pointer;
+      max-width: 7rem;
     }
-    .currency-input::placeholder { color: rgba(255,255,255,0.5); }
+    .currency-select option {
+      background: #1e293b;
+      color: #fff;
+      font-weight: 500;
+    }
 
     .pill-group {
       display: flex;
@@ -415,6 +419,22 @@
       transition: background var(--trans), color var(--trans);
     }
 
+    /* ── Footer ── */
+    .app-footer {
+      text-align: center;
+      padding: 2rem 1rem 1.5rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      line-height: 2;
+    }
+    .app-footer a {
+      color: var(--p);
+      text-decoration: none;
+      font-weight: 600;
+      transition: opacity var(--trans);
+    }
+    .app-footer a:hover { opacity: 0.75; }
+
     /* Reset */
     .reset-wrap {
       text-align: center;
@@ -435,8 +455,22 @@
     <span class="header-icon">⛽</span>
     <h1>Fuel Economy</h1>
     <div class="header-controls">
-      <input class="currency-input" id="currency" type="text" value="$" maxlength="3"
-             title="Currency symbol" aria-label="Currency symbol" placeholder="$">
+      <select class="currency-select" id="currency" title="Currency" aria-label="Currency">
+        <option value="$">$ USD</option>
+        <option value="€">€ EUR</option>
+        <option value="£">£ GBP</option>
+        <option value="₱">₱ PHP</option>
+        <option value="¥">¥ JPY</option>
+        <option value="¥">¥ CNY</option>
+        <option value="₹">₹ INR</option>
+        <option value="₩">₩ KRW</option>
+        <option value="S$">S$ SGD</option>
+        <option value="A$">A$ AUD</option>
+        <option value="C$">C$ CAD</option>
+        <option value="RM">RM MYR</option>
+        <option value="AED">AED</option>
+        <option value="CHF">CHF</option>
+      </select>
       <div class="pill-group">
         <button class="pill-btn on" data-u="km" onclick="setUnit('km')">KM</button>
         <button class="pill-btn" data-u="mi" onclick="setUnit('mi')">MI</button>
@@ -611,6 +645,11 @@
     </div>
   </main>
 
+  <footer class="app-footer">
+    <div>Made with ❤️ by <a href="https://github.com/orlandoayeras" target="_blank" rel="noopener noreferrer">@orlandoayeras</a></div>
+    <div>Find this useful? <a href="https://github.com/orlandoayeras" target="_blank" rel="noopener noreferrer">Follow on GitHub</a> ⭐</div>
+  </footer>
+
   <script>
     'use strict';
 
@@ -669,7 +708,7 @@
     }
 
     function n(id)   { return parseFloat(document.getElementById(id).value) || 0; }
-    function cur()   { return document.getElementById('currency').value.trim() || '$'; }
+    function cur()   { return document.getElementById('currency').value || '$'; }
     function f(v, d = 2) { return isFinite(v) && !isNaN(v) ? v.toFixed(d) : '—'; }
     function money(v, d = 2) { return v === '—' ? '—' : `${cur()}${f(v, d)}`; }
 
