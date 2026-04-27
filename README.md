@@ -1,4 +1,8 @@
 # Fuel Economy Calculator
+[![Github Downloads all Releases](https://img.shields.io/github/downloads/orlandoayeras/fuel-eco-calculator/total)](https://github.com/orlandoayeras/fuel-eco-calculator/releases)
+[![Github Downloads latest Release](https://img.shields.io/github/downloads/orlandoayeras/fuel-eco-calculator/latest/total)](https://github.com/orlandoayeras/fuel-eco-calculator/releases/latest)
+[![License](https://img.shields.io/github/license/orlandoayeras/fuel-eco-calculator)](https://github.com/orlandoayeras/fuel-eco-calculator/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/orlandoayeras/fuel-eco-calculator)](https://github.com/orlandoayeras/fuel-eco-calculator/issues)
 
 A lightweight Progressive Web App (PWA) for calculating fuel economy and trip costs for **Gasoline**, **Hybrid EV**, and **Full EV** vehicles. Works in any browser, installable on mobile, and functions offline.
 
